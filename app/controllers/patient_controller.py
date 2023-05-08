@@ -12,12 +12,22 @@ class PatientController:
         self.patient_service = patient_service
         self.logger = logging.getLogger(__name__)
 
-    def add_patient(self, patient,  user_id):
+    def add_patient(self, patient, user_id):
         try:
             return self.patient_service.add_patient(patient, user_id)
         except Exception as e:
             self.logger.error(f"Error al agregar paciente {e}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={
                 "message": "Error al agregar paciente",
+                "error": str(e)
+            })
+
+    def get_all_patients(self, search_query, page, limit):
+        try:
+            return self.patient_service.get_all_patients(search_query, page, limit)
+        except Exception as e:
+            self.logger.error(f"Error al obtener pacientes {e}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={
+                "message": "Error al obtener pacientes",
                 "error": str(e)
             })
