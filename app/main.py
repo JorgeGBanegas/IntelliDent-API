@@ -1,6 +1,36 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from mangum import Mangum
+from pydantic import ValidationError
+from pydantic.error_wrappers import ErrorWrapper
+from starlette import status
+from starlette.responses import JSONResponse
+from app.config.database import Base, engine
+from routes.patient_routes import router as patient_router
 
-app = FastAPI()
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(
+    title="IntelliDent API",
+    description="API para la aplicación IntelliDent",
+    version="1.0.0"
+)
+
+
+@app.exception_handler(RequestValidationError)
+async def http_exception_accept_handler(request: Request, exc: RequestValidationError) -> Response:
+    raw_errors = exc.raw_errors
+    error_wrapper: ErrorWrapper = raw_errors[0]
+    validation_error: ValidationError = error_wrapper.exc
+    overwritten_errors = validation_error.errors()
+    return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        content={"detail": jsonable_encoder(overwritten_errors)},
+                        )
+
+app.include_router(patient_router)
+
+handler = Mangum(app)
 
 
 @app.get("/")
@@ -12,6 +42,8 @@ async def root():
         "email": "jorge.g.banegas@gmail.com"
     }
 
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host='localhost', port=8000)
+
+    uvicorn.run("app.main:app", host='localhost', port=8000, reload=True)

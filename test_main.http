@@ -5,7 +5,20 @@ Accept: application/json
 
 ###
 
-GET http://127.0.0.1:8000/hello/User
+GET http://127.0.0.1:8000/patients
 Accept: application/json
 
 ###
+
+POST http://127.0.0.1:8000/patients
+Content-Type: application/json
+
+{
+  "first_name": "J",
+  "last_name": "{{$random.alphabetic(10)}}",
+  "date_of_birth": "2020-05-06",
+  "gender": "M",
+  "phone_number": "78343434",
+  "email": "{{$random.email}}",
+  "created_by": "{{$random.alphabetic(36)}}"
+}
