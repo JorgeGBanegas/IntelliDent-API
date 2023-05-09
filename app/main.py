@@ -7,7 +7,7 @@ from pydantic.error_wrappers import ErrorWrapper
 from starlette import status
 from starlette.responses import JSONResponse
 from app.config.database import Base, engine
-from routes.patient_routes import router as patient_router
+from app.routes.patient_routes import router as patient_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -43,7 +43,7 @@ async def root():
     }
 
 
-if __name__ == "__main__":
-    import uvicorn
+# 3if __name__ == "__main__":
+   # import uvicorn
 
-    uvicorn.run("app.main:app", host='localhost', port=8000, reload=True)
+    # uvicorn.run("app.main:app", host='localhost', port=8000, reload=True)
