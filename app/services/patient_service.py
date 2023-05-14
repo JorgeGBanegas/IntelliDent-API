@@ -36,7 +36,7 @@ class PatientService:
                                      Patient.last_name.ilike(f"%{search_query}%"))
 
             query = query.order_by(Patient.first_name)
-            patients = query.offset(page).limit(limit).all()
+            patients = query.offset(page * limit).limit(limit).all()
             return patients
         except Exception as e:
             self.logger.error(f"Error al obtener pacientes: {e}")
