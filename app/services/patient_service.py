@@ -41,3 +41,12 @@ class PatientService:
         except Exception as e:
             self.logger.error(f"Error al obtener pacientes: {e}")
             raise ValueError(f"Error al obtener pacientes de la base de datos : {e}")
+
+    # get patient by id
+    def get_patient_by_id(self, patient_id) -> Patient:
+        try:
+            patient = self.db.query(Patient).get(patient_id)
+            return patient
+        except Exception as e:
+            self.logger.error(f"Error al obtener paciente: {e}")
+            raise ValueError(f"Error al obtener paciente de la base de datos : {e}")
