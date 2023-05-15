@@ -22,3 +22,8 @@ Content-Type: application/json
   "email": "{{$random.email}}",
   "created_by": "{{$random.alphabetic(36)}}"
 }
+
+###
+
+GET http://127.0.0.1:8000/patients/65
+Accept: application/json

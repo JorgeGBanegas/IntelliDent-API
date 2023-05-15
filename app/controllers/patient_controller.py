@@ -35,14 +35,13 @@ class PatientController:
     def get_patient_by_id(self, patient_id):
         try:
             patient = self.patient_service.get_patient_by_id(patient_id)
-            if not patient:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={
-                    "message": "Paciente no encontrado",
-                    "error": "No se encontró un paciente con el id especificado"
-                })
             return patient
-        except HTTPException as e:
-            raise e
+
+        except FileNotFoundError as e:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={
+                "message": "Paciente no encontrado",
+                "error": str(e)
+            })
         except Exception as e:
             self.logger.error(f"Error al obtener paciente {e}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={

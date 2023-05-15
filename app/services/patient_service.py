@@ -46,9 +46,12 @@ class PatientService:
     def get_patient_by_id(self, patient_id) -> Patient:
         try:
             patient = self.db.query(Patient).get(patient_id)
+            if not patient:
+                raise FileNotFoundError(f"No se encontró un paciente con el id especificado")
             return patient
+        except FileNotFoundError as e:
+            raise e
         except Exception as e:
-            self.logger.error(f"Error al obtener paciente: {e}")
             raise ValueError(f"Error al obtener paciente de la base de datos : {e}")
 
     # update patient
