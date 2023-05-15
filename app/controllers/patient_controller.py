@@ -49,3 +49,18 @@ class PatientController:
                 "message": "Error al obtener paciente",
                 "error": str(e)
             })
+
+    def update_patient(self, patient_id, patient_update):
+        try:
+            patient = self.patient_service.update_patient(patient_id, patient_update)
+            return patient
+        except FileNotFoundError as e:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={
+                "message": "Paciente no encontrado",
+                "error": str(e)
+            })
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={
+                "message": "Error al actualizar paciente",
+                "error": str(e)
+            })

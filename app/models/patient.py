@@ -14,4 +14,4 @@ class Patient(Base):
     created_by = Column(String(50), nullable=True, server_default=None)
     created_at = Column(TIMESTAMP(timezone=True), nullable=false, server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), nullable=false, server_default=func.now(), onupdate=func.now())
-    deleted_at = Column(TIMESTAMP(timezone=True), nullable=True, server_default=None, onupdate=func.now())
+    deleted_at = Column(TIMESTAMP(timezone=True), nullable=True, server_default=None)

@@ -43,8 +43,8 @@ class PatientCreate(PatientBase):
     pass
 
 
-class PatientUpdate(BaseModel):
-    firs_name: Optional[str] = Field(None, min_length=3, max_length=50, example="Jorge")
+class PatientUpdate(PatientBase):
+    first_name: Optional[str] = Field(None, min_length=3, max_length=50, example="Jorge")
     last_name: Optional[str] = Field(None, min_length=3, max_length=50, example="Banegas")
     date_of_birth: Optional[datetime]
     phone_number: Optional[str] = Field(None, min_length=7, max_length=20, example="504-9999-9999")

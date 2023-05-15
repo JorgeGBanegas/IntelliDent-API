@@ -2,7 +2,7 @@ from typing import List, Type
 
 from sqlalchemy.orm import Session
 from app.models.patient import Patient
-from app.schemas.patient_schema import PatientCreate
+from app.schemas.patient_schema import PatientCreate, PatientUpdate
 import logging
 
 # configure logging
@@ -50,3 +50,21 @@ class PatientService:
         except Exception as e:
             self.logger.error(f"Error al obtener paciente: {e}")
             raise ValueError(f"Error al obtener paciente de la base de datos : {e}")
+
+    # update patient
+    def update_patient(self, patient_id, patient_update: PatientUpdate) -> Patient:
+        try:
+            patient = self.db.query(Patient).get(patient_id)
+            if not patient:
+                raise FileNotFoundError(f"No se encontró un paciente con el id especificado")
+
+            for var, value in vars(patient_update).items():
+                if value is not None:
+                    setattr(patient, var, value)
+            self.db.commit()
+            self.db.refresh(patient)
+            return patient
+        except FileNotFoundError as e:
+            raise e
+        except Exception as e:
+            raise ValueError(f"Error al actualizar paciente en la base de datos : {e}")
