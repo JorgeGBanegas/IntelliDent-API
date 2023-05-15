@@ -3,7 +3,7 @@ from fastapi_cognito import CognitoAuth, CognitoSettings
 
 from app.config.aws_settings import AwsSetting
 from app.controllers.patient_controller import PatientController
-from app.schemas.patient_schema import PatientCreate, Patient, PatientUpdate
+from app.schemas.patient_schema import PatientCreate, Patient, PatientUpdate, PatientItemList
 
 aws_settings = AwsSetting()
 cognito_sa = CognitoAuth(settings=CognitoSettings.from_global_settings(aws_settings), userpool_name="sa")
@@ -24,10 +24,9 @@ def add_patient(patient: PatientCreate, patient_controller: PatientController = 
 
 
 # route for get all patients with pagination
-@router.get("/", response_model=list[Patient], status_code=status.HTTP_200_OK)
+@router.get("/", response_model=list[PatientItemList], status_code=status.HTTP_200_OK)
 def get_all_patients(search_query: str = None, page: int = 0, limit: int = 50,
-                     patient_controller: PatientController = Depends(),
-                     auth: CognitoAuth = Depends(cognito_sa.auth_required)):
+                     patient_controller: PatientController = Depends()):
     return patient_controller.get_all_patients(search_query, page, limit)
 
 

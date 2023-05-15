@@ -57,3 +57,10 @@ class PatientUpdate(PatientBase):
 
 class Patient(PatientBase):
     patient_id: int = Field(..., example=1)
+
+
+class PatientItemList(BaseModel):
+    patient_id: int = Field(..., example=1)
+    first_name: str = Field(..., min_length=3, max_length=50, example="Jorge")
+    last_name: str = Field(..., min_length=3, max_length=50, example="Banegas")
+    phone_number: str = Field(..., min_length=5, max_length=15, example="70976408")

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.Exceptions.persistence_exceptions import RecordNotFoundException, RecordAlreadyExistsException, \
     IntegrityErrorException
 from app.models.patient import Patient
-from app.schemas.patient_schema import PatientCreate, PatientUpdate
+from app.schemas.patient_schema import PatientCreate, PatientUpdate, PatientItemList
 import logging
 from sqlalchemy.exc import IntegrityError
 
@@ -44,16 +44,20 @@ class PatientService:
                                                f"encuentra registrado en la base de datos")
 
     # get al patients with pagination
-    def get_all_patients(self, search_query, page, limit) -> List[Type[Patient]]:
+    def get_all_patients(self, search_query, page, limit) -> list[PatientItemList]:
         try:
-            query = self.db.query(Patient)
+            query = self.db.query(Patient).with_entities(Patient.patient_id, Patient.first_name, Patient.last_name,
+                                                         Patient.phone_number)
             if search_query:
                 query = query.filter(Patient.first_name.ilike(f"%{search_query}%") |
                                      Patient.last_name.ilike(f"%{search_query}%"))
 
             query = query.order_by(Patient.first_name)
             patients = query.offset(page * limit).limit(limit).all()
-            return patients
+            patients_list = [PatientItemList(patient_id=patient.patient_id, first_name=patient.first_name,
+                                             last_name=patient.last_name,
+                                             phone_number=patient.phone_number) for patient in patients]
+            return patients_list
         except Exception as e:
             raise ValueError(f"Error al obtener pacientes de la base de datos : {e}")
 
