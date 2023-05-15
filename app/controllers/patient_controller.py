@@ -1,6 +1,8 @@
 import logging
 from fastapi import HTTPException, Depends
 from starlette import status
+
+from app.Exceptions.persistence_exceptions import RecordNotFoundException
 from app.dependencies.dependencies import get_patient_service
 from app.services.patient_service import PatientService
 
@@ -16,7 +18,6 @@ class PatientController:
         try:
             return self.patient_service.add_patient(patient, user_id)
         except Exception as e:
-            self.logger.error(f"Error al agregar paciente {e}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={
                 "message": "Error al agregar paciente",
                 "error": str(e)
@@ -26,7 +27,6 @@ class PatientController:
         try:
             return self.patient_service.get_all_patients(search_query, page, limit)
         except Exception as e:
-            self.logger.error(f"Error al obtener pacientes {e}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={
                 "message": "Error al obtener pacientes",
                 "error": str(e)
@@ -37,7 +37,7 @@ class PatientController:
             patient = self.patient_service.get_patient_by_id(patient_id)
             return patient
 
-        except FileNotFoundError as e:
+        except RecordNotFoundException as e:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={
                 "message": "Paciente no encontrado",
                 "error": str(e)
@@ -53,7 +53,7 @@ class PatientController:
         try:
             patient = self.patient_service.update_patient(patient_id, patient_update)
             return patient
-        except FileNotFoundError as e:
+        except RecordNotFoundException as e:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={
                 "message": "Paciente no encontrado",
                 "error": str(e)

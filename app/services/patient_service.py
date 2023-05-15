@@ -1,6 +1,7 @@
 from typing import List, Type
 
 from sqlalchemy.orm import Session
+from app.Exceptions.persistence_exceptions import RecordNotFoundException
 from app.models.patient import Patient
 from app.schemas.patient_schema import PatientCreate, PatientUpdate
 import logging
@@ -24,7 +25,6 @@ class PatientService:
             self.db.refresh(patient)
             return patient
         except Exception as e:
-            self.logger.error(f"Error al agregar paciente: {e}")
             raise ValueError(f"Error al agregar paciente a la base de datos : {e}")
 
     # get al patients with pagination
@@ -39,7 +39,6 @@ class PatientService:
             patients = query.offset(page * limit).limit(limit).all()
             return patients
         except Exception as e:
-            self.logger.error(f"Error al obtener pacientes: {e}")
             raise ValueError(f"Error al obtener pacientes de la base de datos : {e}")
 
     # get patient by id
@@ -47,9 +46,9 @@ class PatientService:
         try:
             patient = self.db.query(Patient).get(patient_id)
             if not patient:
-                raise FileNotFoundError(f"No se encontró un paciente con el id especificado")
+                raise RecordNotFoundException(f"No se encontró un paciente con el id especificado")
             return patient
-        except FileNotFoundError as e:
+        except RecordNotFoundException as e:
             raise e
         except Exception as e:
             raise ValueError(f"Error al obtener paciente de la base de datos : {e}")
@@ -59,7 +58,7 @@ class PatientService:
         try:
             patient = self.db.query(Patient).get(patient_id)
             if not patient:
-                raise FileNotFoundError(f"No se encontró un paciente con el id especificado")
+                raise RecordNotFoundException(f"No se encontró un paciente con el id especificado")
 
             for var, value in vars(patient_update).items():
                 if value is not None:
@@ -67,7 +66,7 @@ class PatientService:
             self.db.commit()
             self.db.refresh(patient)
             return patient
-        except FileNotFoundError as e:
+        except RecordNotFoundException as e:
             raise e
         except Exception as e:
             raise ValueError(f"Error al actualizar paciente en la base de datos : {e}")
