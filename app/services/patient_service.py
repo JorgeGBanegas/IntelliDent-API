@@ -1,10 +1,12 @@
 from typing import List, Type
 
 from sqlalchemy.orm import Session
-from app.Exceptions.persistence_exceptions import RecordNotFoundException
+from app.Exceptions.persistence_exceptions import RecordNotFoundException, RecordAlreadyExistsException, \
+    IntegrityErrorException
 from app.models.patient import Patient
 from app.schemas.patient_schema import PatientCreate, PatientUpdate
 import logging
+from sqlalchemy.exc import IntegrityError
 
 # configure logging
 logging.basicConfig(filename='app.log', level=logging.DEBUG,
@@ -18,14 +20,28 @@ class PatientService:
 
     def add_patient(self, patient: PatientCreate, user_id) -> Patient:
         try:
+            self._is_patient_registered(patient)
             patient = Patient(**patient.dict())
             patient.created_by = user_id
             self.db.add(patient)
             self.db.commit()
             self.db.refresh(patient)
             return patient
+
+        except RecordAlreadyExistsException:
+            raise
+        except IntegrityError:
+            raise IntegrityErrorException(f"El email {patient.email} ya se encuentra registrado en la base de datos")
         except Exception as e:
             raise ValueError(f"Error al agregar paciente a la base de datos : {e}")
+
+    def _is_patient_registered(self, patient):
+        patient_exists = self.db.query(Patient).filter(Patient.first_name == patient.first_name,
+                                                       Patient.last_name == patient.last_name,
+                                                       Patient.date_of_birth == patient.date_of_birth).first()
+        if patient_exists:
+            raise RecordAlreadyExistsException(f"El paciente {patient.first_name} {patient.last_name} ya se "
+                                               f"encuentra registrado en la base de datos")
 
     # get al patients with pagination
     def get_all_patients(self, search_query, page, limit) -> List[Type[Patient]]:

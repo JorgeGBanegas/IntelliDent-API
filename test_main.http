@@ -15,11 +15,11 @@ Content-Type: application/json
 
 {
   "first_name": "Juan Antonio",
-  "last_name": "Perez",
-  "date_of_birth": "2020-05-06",
+  "last_name": "Perez Mamani",
+  "date_of_birth": "1980-05-06",
   "gender": "M",
   "phone_number": "78343434",
-  "email": "juan.perez@gmail.com",
+  "email": "juan.antonio.perez228@gmail.com",
   "created_by": "{{$random.alphabetic(36)}}"
 }
 
