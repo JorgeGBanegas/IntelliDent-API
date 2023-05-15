@@ -32,7 +32,8 @@ def get_all_patients(search_query: str = None, page: int = 0, limit: int = 50,
 
 
 @router.get("/{patient_id}", response_model=Patient, status_code=status.HTTP_200_OK)
-def get_patient_by_id(patient_id: str, patient_controller: PatientController = Depends()):
+def get_patient_by_id(patient_id: str, patient_controller: PatientController = Depends(),
+                      auth: CognitoAuth = Depends(cognito_sa.auth_required)):
     return patient_controller.get_patient_by_id(patient_id)
 
 
