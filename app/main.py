@@ -8,7 +8,7 @@ from starlette import status
 from starlette.responses import JSONResponse
 from app.config.database import Base, engine
 from app.routes.patient_routes import router as patient_router
-
+from app.routes.image_process_routes import router as image_process_router
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -29,6 +29,7 @@ async def http_exception_accept_handler(request: Request, exc: RequestValidation
                         )
 
 app.include_router(patient_router)
+app.include_router(image_process_router)
 
 handler = Mangum(app)
 
@@ -43,7 +44,6 @@ async def root():
     }
 
 
-# 3if __name__ == "__main__":
-   # import uvicorn
-
-    # uvicorn.run("app.main:app", host='localhost', port=8000, reload=True)
+#   if __name__ == "__main__":
+#       import uvicorn
+#       uvicorn.run("app.main:app", host='localhost', port=8000, reload=True)
