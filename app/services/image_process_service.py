@@ -210,13 +210,13 @@ class ImageProcessService:
 
     @staticmethod
     def _apply_magma_colormap(image):
-        # Convertir la imagen a escala de grises
+        # Convert the image to grayscale
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
 
-        # Aplicar el mapa de colores "Magma" a la imagen en escala de grises
+        # Apply the "Magma" colormap to the grayscale image
         colormap_image = cv2.applyColorMap(gray_image, cv2.COLORMAP_MAGMA)
 
-        # Agregar el canal alfa a la imagen resultante
+        # Add the alpha channel to the resulting image
         b, g, r = cv2.split(colormap_image)
         alpha = image[:, :, 3]
         colormap_image = cv2.merge((b, g, r, alpha))
