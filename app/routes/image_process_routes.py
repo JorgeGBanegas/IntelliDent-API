@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, Depends
+from fastapi import APIRouter, UploadFile, Depends, Header
 from fastapi_cognito import CognitoAuth, CognitoSettings
 from starlette import status
 
@@ -16,6 +16,8 @@ router = APIRouter(
 
 @router.post("/", response_model=None, status_code=status.HTTP_201_CREATED)
 async def analyze_x_ray(image_file: UploadFile, image_process_controller: ImageProcessController = Depends(),
-                        auth: CognitoAuth = Depends(cognito_sa.auth_required)):
+                        authorization: str = Header(...), auth: CognitoAuth = Depends(cognito_sa.auth_required)):
     image = image_file.file.read()
-    return await image_process_controller.analyze_x_ray(image)
+    # Get the token from the header
+    images = await image_process_controller.analyze_x_ray(image, authorization)
+    return images

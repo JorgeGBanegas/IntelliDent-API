@@ -1,9 +1,9 @@
 import io
-
-from PIL import Image
-
+import zipfile
 import cv2
 import numpy as np
+import requests
+from fastapi import UploadFile
 from numpy import ndarray
 from sqlalchemy.orm import Session
 
@@ -12,19 +12,75 @@ class ImageProcessService:
     def __init__(self, db: Session):
         self.db = db
 
-    async def analyze_x_ray(self, image_file) -> bytes:
+    async def analyze_x_ray(self, image_file, token):
+
         crop_image = self._crop_image(image_file)
         enhance_image = self._enhance_image(crop_image)
-        enhance_image = self._convert_ndarray_to_image(enhance_image)
-        return enhance_image
+        # Process image
+        inference_image, negative_image, magma_image = self._image_process(enhance_image)
+        inference_image = self._convert_ndarray_to_image(inference_image)
+
+        inference = self._infer_image(inference_image, token)
+        images_array = [enhance_image, negative_image, magma_image]
+        images = []
+        for image in images_array:
+            image = self._convert_ndarray_to_image(image)
+            images.append(image)
+        return inference, images
+
+    async def convert_to_zip(self, enhanced_image) -> bytes:
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+            for i, image_data in enumerate(enhanced_image):
+                # Add each image to the ZIP file with a unique name
+                filename = f"image_{i}.jpg"
+                zip_file.writestr(filename, image_data)
+        # Get the bytes from the ZIP file
+        zip_data = zip_buffer.getvalue()
+        return zip_data
 
     @staticmethod
-    def _convert_ndarray_to_image(enhance_image):
-        image = Image.fromarray(enhance_image)
-        byte_stream = io.BytesIO()
-        image.save(byte_stream, format="JPEG")
-        byte_stream.seek(0)
-        return byte_stream.read()
+    def _infer_image(image, token):
+        url = "https://6477cd5c362560649a2cfa4e.mockapi.io/analysis"
+        # Prepare headers for the HTTP request
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {token}'
+        }
+        # convert image to uploadFile
+        image_inference = UploadFile(filename="image.jpg", file=image)
+
+        # Send the request
+
+        response = requests.post(url)
+        if response.status_code != 201:
+            raise Exception("Error al realizar la inferencia")
+
+        # Return the response
+        return response.json()
+
+    @staticmethod
+    def _image_process(image):
+        # Resized image for neural network
+        inference_image = ImageProcessService._resize_image_png(image, 224, True)
+
+        # Negative image
+        negative_image = ImageProcessService._get_negative_image(image)
+
+        # Magma image
+        magma_image = ImageProcessService._apply_magma_colormap(image)
+
+        return inference_image, negative_image, magma_image
+
+    @staticmethod
+    def _convert_ndarray_to_image(image):
+        # Asegurarse de que la imagen tenga el tipo de datos correcto y esté en el rango adecuado
+        image = np.clip(image, 0, 255).astype(np.uint8)
+
+        # Convertir la imagen a formato de bytes
+        retval, buffer = cv2.imencode('.png', image)
+        byte_stream = io.BytesIO(buffer)
+        return byte_stream.getvalue()
 
     @staticmethod
     def _crop_image(image_file) -> ndarray:
@@ -32,64 +88,136 @@ class ImageProcessService:
         image_array = np.frombuffer(image_file, np.uint8)
         image = cv2.imdecode(image_array, cv2.IMREAD_UNCHANGED)
 
-        # Calculate the aspect ratio of the original image
-        original_height, original_width, _ = image.shape
-        aspect_ratio = original_width / original_height
+        # Convert the image to grayscale
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        # Set the desired width for display
-        screen_width = 800
+        # median blur for noise reduction
+        gray_image = cv2.medianBlur(gray_image, 7)
+        gray_image = cv2.bilateralFilter(gray_image, 9, 75, 75)
 
-        # Calculate the corresponding height to maintain the aspect ratio
-        screen_height = int(screen_width / aspect_ratio)
+        # apply adaptive thresholding to get a binary image
+        binary_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11,
+                                             2)
 
-        # Resize the image to fit the screen
-        resized_image = cv2.resize(image, (screen_width, screen_height))
+        # find the contours from the binary image
+        contours, hierarchy = cv2.findContours(binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # Convert the resized image to grayscale
-        gray = cv2.cvtColor(resized_image, cv2.COLOR_BGR2GRAY)
+        # find the contour with the maximum area
+        larger_contour = max(contours, key=cv2.contourArea)
 
-        # Apply Canny edge detection
-        edges = cv2.Canny(gray, 80, 150)
+        # get the bounding rectangle of the larger contour
+        x, y, w, h = cv2.boundingRect(larger_contour)
 
-        # Find contours in the edges
-        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Create a transparent mask of the size of the original image
+        mask = np.zeros((image.shape[0], image.shape[1], 4), dtype=np.uint8)
 
-        # Find the contour with the largest area (periapical radiograph)
-        largest_contour = max(contours, key=cv2.contourArea)
+        # Draws contour outlines or filled contours.
+        cv2.drawContours(mask, [larger_contour], 0, (255, 255, 255, 255), -1)
 
-        # Create a mask from the largest contour
-        mask = np.zeros_like(edges)
-        cv2.drawContours(mask, [largest_contour], 0, 255, thickness=cv2.FILLED)
+        # Make sure the original image is RGBA
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2BGRA)
 
-        # Bitwise-AND the resized image with the mask to get the cropped radiograph
-        cropped_image = cv2.bitwise_and(resized_image, resized_image, mask=mask)
+        # Apply the mask to the original image to get the cropped image with transparent background
+        crop_image = cv2.bitwise_and(image, mask)
 
-        # Find the bounding rectangle of the largest contour
-        x, y, w, h = cv2.boundingRect(largest_contour)
+        # Crop image to the size of the contour
+        crop_image = crop_image[y:y + h, x:x + w]
 
-        # Adjust the bounding rectangle coordinates based on the resizing
-        x = int(x * original_width / screen_width)
-        y = int(y * original_height / screen_height)
-        w = int(w * original_width / screen_width)
-        h = int(h * original_height / screen_height)
-
-        # Crop the original image using the adjusted bounding rectangle coordinates
-        cropped_original_image = image[y:y + h, x:x + w].copy()
-
-        return cropped_original_image
+        # get image with transparent background
+        return crop_image
 
     @staticmethod
-    def _enhance_image(image) -> ndarray:
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    def _enhance_image(image):
+        # convert the image to grayscale
+        gray = cv2.cvtColor(image, cv2.COLOR_RGBA2GRAY)  # Change color space from RGBA to Grayscale
 
-        # normalize the image
-        normalized = np.zeros((800, 800))
-        normalized = cv2.normalize(gray, normalized, 0, 255, cv2.NORM_MINMAX)
+        # Apply CLAHE for contrast enhancement
+        clahe = cv2.createCLAHE(clipLimit=2.2, tileGridSize=(5, 5))
+        image_clahe = clahe.apply(gray)
 
-        # Apply histogram equalization
-        equalized = cv2.equalizeHist(normalized)
+        # Apply bilateral filter to smooth the image
+        image_bilateral = cv2.bilateralFilter(image_clahe, 5, 75, 75)
 
-        # Apply Median filter
-        median_filter = cv2.medianBlur(equalized, 5)
+        # create a mask from the alpha channel
+        mask = image[:, :, 3]  # Canal alfa de la imagen RGBA
 
-        return median_filter
+        # create a new image with the same shape as the original image
+        result = cv2.cvtColor(image_bilateral, cv2.COLOR_GRAY2BGRA)  # Change from grayscale to BGRA
+        result[:, :, 3] = mask  # Assign the mask to the last channel of the new image
+
+        return result
+
+    @staticmethod
+    def _resize_image_png(image, size, transparent):
+        # load original image
+        original_image = image
+
+        # Get original image size
+        original_height, original_width = original_image.shape[:2]
+
+        # Define the maximum desired size for the resized image
+        max_size = size
+
+        # Calculate the new size keeping the aspect ratio
+        if original_height > original_width:
+            new_height = max_size
+            scale = new_height / original_height
+            new_width = int(original_width * scale)
+        else:
+            new_width = max_size
+            scale = new_width / original_width
+            new_height = int(original_height * scale)
+
+        # Resizing the image using the new calculated size
+        resized_image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+        # Create a new image with the desired size
+        if transparent:
+            new_image = np.zeros((max_size, max_size, 4), dtype=np.uint8)
+        else:
+            new_image = np.zeros((max_size, max_size, 3), dtype=np.uint8)
+
+        # Calculate the coordinates to place the resized image centered on the new image
+        x = int((max_size - new_width) / 2)
+        y = int((max_size - new_height) / 2)
+
+        # Copy the resized image to the new image preserving the alpha channel if it is transparent
+        if transparent:
+            new_image[y:y + new_height, x:x + new_width] = resized_image
+        else:
+            new_image[y:y + new_height, x:x + new_width] = resized_image[:, :, :3]
+
+        return new_image
+
+    # create image negative
+    @staticmethod
+    def _get_negative_image(image):
+        # Get the RGBA channels of the image
+        r = image[:, :, 0]
+        g = image[:, :, 1]
+        b = image[:, :, 2]
+        a = image[:, :, 3]
+
+        # Get the negative of the RGB channels
+        negative_r = 255 - r
+        negative_g = 255 - g
+        negative_b = 255 - b
+
+        # Create a new image with the negative channels and the same alpha channel
+        negative_image = np.dstack((negative_r, negative_g, negative_b, a))
+
+        return negative_image
+
+    @staticmethod
+    def _apply_magma_colormap(image):
+        # Convertir la imagen a escala de grises
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
+
+        # Aplicar el mapa de colores "Magma" a la imagen en escala de grises
+        colormap_image = cv2.applyColorMap(gray_image, cv2.COLORMAP_MAGMA)
+
+        # Agregar el canal alfa a la imagen resultante
+        b, g, r = cv2.split(colormap_image)
+        alpha = image[:, :, 3]
+        colormap_image = cv2.merge((b, g, r, alpha))
+        return colormap_image
