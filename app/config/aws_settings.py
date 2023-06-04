@@ -10,6 +10,9 @@ class AwsSetting(BaseSettings):
     check_expiration: bool = True
     jwt_header_prefix: str = "Bearer"
     jwt_header_name: str = "Authorization"
+    aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+    aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+    aws_bucket_name = os.getenv("AWS_BUCKET_NAME")
     userpools: dict = {
         "sa": {
             "region": os.getenv("AWS_REGION"),
