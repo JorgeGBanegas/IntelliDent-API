@@ -11,6 +11,7 @@ from app.routes.patient_routes import router as patient_router
 from app.routes.image_process_routes import router as image_process_router
 from app.routes.dental_image_routes import router as dental_image_router
 from app.routes.image_category_routes import router as image_category_router
+from app.routes.tooth_routes import router as tooth_router
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -34,6 +35,7 @@ app.include_router(patient_router)
 app.include_router(image_process_router)
 app.include_router(dental_image_router)
 app.include_router(image_category_router)
+app.include_router(tooth_router)
 
 handler = Mangum(app)
 
