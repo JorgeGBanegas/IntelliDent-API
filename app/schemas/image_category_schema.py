@@ -4,7 +4,7 @@ from pydantic import Field, BaseModel
 
 
 class ImageCategoryBase(BaseModel):
-    name: str = Field(..., min_length=3, max_length=50, example="Radiografía")
+    image_category_name: str = Field(..., min_length=3, max_length=50, example="Radiografía")
     description: Optional[str] = None
 
     class Config:

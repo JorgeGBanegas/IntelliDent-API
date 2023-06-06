@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
 
 from app.Exceptions.persistence_exceptions import RecordNotFoundException
-from app.models.image_category import ImageCategory
+from app.models import ImageCategory
+from app.schemas.image_category_schema import ImageCategory as ImageCategorySchema
 
 
 class ImageCategoryService:
@@ -18,5 +19,16 @@ class ImageCategoryService:
 
         except RecordNotFoundException:
             raise
+        except Exception as e:
+            raise ValueError(f"Error al obtener categoría: {e}")
+
+    def get_all_categories(self):
+        try:
+            categories = self.db.query(ImageCategory).all()
+            print(categories)
+            categories_list = [ImageCategorySchema(image_category_id=category.image_category_id,
+                                                   image_category_name=category.image_category_name)
+                               for category in categories]
+            return categories_list
         except Exception as e:
             raise ValueError(f"Error al obtener categoría: {e}")
