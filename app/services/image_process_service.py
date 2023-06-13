@@ -1,4 +1,5 @@
 import io
+import os
 import zipfile
 import cv2
 import numpy as np
@@ -41,19 +42,15 @@ class ImageProcessService:
 
     @staticmethod
     def _infer_image(image, token):
-        url = "https://6477cd5c362560649a2cfa4e.mockapi.io/analysis"
-        # Prepare headers for the HTTP request
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {token}'
-        }
-        # convert image to uploadFile
+        # get url from env
+        url = os.environ.get('ENDPOINT_INFERENCES')
+
         image_inference = UploadFile(filename="image.jpg", file=image)
-
-        # Send the request
-
-        response = requests.post(url)
-        if response.status_code != 201:
+        multipart_data = {
+            'image_file': ('image.jpg', image_inference.file, 'image/jpeg')
+        }
+        response = requests.post(url, files=multipart_data)
+        if response.status_code != 200:
             raise Exception("Error al realizar la inferencia")
 
         # Return the response
@@ -78,7 +75,7 @@ class ImageProcessService:
         image = np.clip(image, 0, 255).astype(np.uint8)
 
         # Convertir la imagen a formato de bytes
-        retval, buffer = cv2.imencode('.png', image)
+        retval, buffer = cv2.imencode('.jpg', image)
         byte_stream = io.BytesIO(buffer)
         return byte_stream.getvalue()
 
