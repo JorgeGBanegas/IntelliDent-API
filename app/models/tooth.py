@@ -11,5 +11,6 @@ class Tooth(Base):
     numeration = Column(Integer)
     description = Column(String(255), nullable=True)
     images = relationship("DentalImage", secondary="image_tooth", back_populates="teeth")
+    details = relationship("DetailOdontogram", back_populates="tooth")
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
     deleted_at = Column(TIMESTAMP(timezone=True), nullable=True, server_default=None)

@@ -12,7 +12,9 @@ from app.routes.image_process_routes import router as image_process_router
 from app.routes.dental_image_routes import router as dental_image_router
 from app.routes.image_category_routes import router as image_category_router
 from app.routes.tooth_routes import router as tooth_router
-Base.metadata.create_all(bind=engine)
+from app.routes.type_odontogram_routes import router as type_odontogram_router
+from app.routes.odontogram_routes import router as odontogram_router
+# Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="IntelliDent API",
@@ -37,6 +39,10 @@ app.include_router(dental_image_router)
 app.include_router(image_category_router)
 app.include_router(tooth_router)
 
+app.include_router(type_odontogram_router)
+app.include_router(odontogram_router)
+
+
 handler = Mangum(app)
 
 
@@ -52,4 +58,4 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app.main:app", host='localhost', port=8000, reload=True)
+    uvicorn.run("app.main:app", host='0.0.0.0', port=8000, reload=True)

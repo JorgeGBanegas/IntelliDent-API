@@ -15,6 +15,11 @@ from app.models.image_category import ImageCategory
 from app.models.tooth import Tooth
 from app.models.image_tooth import image_tooth
 
+from app.models.type_odontogram import TypeOdontogram
+from app.models.treatment import Treatment
+from app.models.odontogram import Odontogram
+from app.models.detail_odontogram import DetailOdontogram
+
 
 setting = Setting()
 # this is the Alembic Config object, which provides
