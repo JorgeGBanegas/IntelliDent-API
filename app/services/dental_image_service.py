@@ -13,6 +13,7 @@ from app.schemas.dental_image_schema import DentalImageItemList, DentalImageCrea
 from app.services.tooth_service import ToothService
 
 
+# noinspection PyTypeChecker
 class DentalImageService:
     def __init__(self, db: Session):
         self.db = db
@@ -92,3 +93,23 @@ class DentalImageService:
     def _rollback_s3(self, bucket, image_urls, s3):
         for image_url in image_urls:
             s3.delete_object(Bucket=bucket, Key=image_url.split('/')[-1])
+
+    def get_all_images_by_patient(self, patient_id: int):
+        try:
+            images = self.db.query(DentalImage).filter(DentalImage.patient_id == patient_id).all()
+            images_list = [DentalImageItemList(dental_image_id=image.dental_image_id, path=image.path,
+                                               title=image.title) for image in images]
+            return images_list
+        except Exception as e:
+            raise ValueError(f"Error al obtener imagenes: {e}")
+
+    def get_all_image_patient_by_tooth(self, patient_id: int, tooth_number: int):
+        try:
+            tooth_id = ToothService(self.db).get_tooth_by_number(tooth_number).tooth_id
+            images = self.db.query(DentalImage).filter(DentalImage.patient_id == patient_id,
+                                                       DentalImage.teeth.any(tooth_id=tooth_id)).all()
+            images_list = [DentalImageItemList(dental_image_id=image.dental_image_id, path=image.path,
+                                               title=image.title) for image in images]
+            return images_list
+        except Exception as e:
+            raise ValueError(f"Error al obtener imagenes: {e}")

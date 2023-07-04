@@ -14,6 +14,7 @@ from app.routes.image_category_routes import router as image_category_router
 from app.routes.tooth_routes import router as tooth_router
 from app.routes.type_odontogram_routes import router as type_odontogram_router
 from app.routes.odontogram_routes import router as odontogram_router
+from app.routes.treatment_routes import router as treatment_router
 # Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -41,6 +42,7 @@ app.include_router(tooth_router)
 
 app.include_router(type_odontogram_router)
 app.include_router(odontogram_router)
+app.include_router(treatment_router)
 
 
 handler = Mangum(app)

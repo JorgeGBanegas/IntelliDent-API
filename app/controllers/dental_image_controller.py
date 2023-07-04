@@ -39,3 +39,21 @@ class DentalImageController:
                 "message": "Error al guardar imagen",
                 "error": str(e)
             })
+
+    def get_all_image_patient_by_tooth(self, patient_id: int, tooth_number: int):
+        try:
+            return self.dental_image_service.get_all_image_patient_by_tooth(patient_id, tooth_number)
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={
+                "message": "Error al obtener imagenes",
+                "error": str(e)
+            })
+
+    def get_all_images_by_patient(self, patient_id: int):
+        try:
+            return self.dental_image_service.get_all_images_by_patient(patient_id)
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={
+                "message": "Error al obtener imagenes",
+                "error": str(e)
+            })

@@ -5,8 +5,8 @@ from app.config.database import Base
 
 
 class DetailOdontogram(Base):
-    detail_odontogram_id = Column(Integer, primary_key=True, index=True)
     __tablename__ = "detail_odontogram"
+    detail_odontogram_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     description = Column(String, nullable=True)
     odontogram_id = Column(Integer, ForeignKey("odontogram.odontogram_id"), primary_key=True)
     odontogram = relationship("Odontogram", back_populates="details")

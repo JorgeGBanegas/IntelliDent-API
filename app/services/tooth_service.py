@@ -31,3 +31,19 @@ class ToothService:
             return teeth_list
         except Exception as e:
             raise ValueError(f"Error al obtener dientes: {e}")
+
+    # noinspection PyTypeChecker
+    def get_tooth_by_number(self, tooth_number: int) -> ToothSchema:
+        try:
+            tooth = self.db.query(Tooth).filter(Tooth.numeration == tooth_number).first()
+            if tooth is None:
+                raise RecordNotFoundException("No se encontró el diente: " + str(tooth_number))
+
+            tooth = ToothSchema(tooth_id=tooth.tooth_id,
+                                tooth_name=tooth.tooth_name, numeration=tooth.numeration)
+
+            return tooth
+        except RecordNotFoundException:
+            raise
+        except Exception as e:
+            raise ValueError(f"Error al obtener diente: {e}")

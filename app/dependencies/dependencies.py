@@ -8,6 +8,7 @@ from app.services.image_process_service import ImageProcessService
 from app.services.odontogram_service import OdontogramService
 from app.services.patient_service import PatientService
 from app.services.tooth_service import ToothService
+from app.services.treatment_service import TreatmentService
 from app.services.type_odontogram_service import TypeOdontogramService
 
 
@@ -37,3 +38,7 @@ def get_odontogram_service(db: Session = Depends(get_db)):
 
 def get_type_odontogram_service(db: Session = Depends(get_db)):
     return TypeOdontogramService(db)
+
+
+def get_treatment_service(db: Session = Depends(get_db)):
+    return TreatmentService(db)
