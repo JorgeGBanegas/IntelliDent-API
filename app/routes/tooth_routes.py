@@ -19,3 +19,8 @@ def get_all_teeth(tooth_controller: ToothController = Depends(),
                   auth: CognitoAuth = Depends(cognito_sa.auth_required)):
     return tooth_controller.get_all_teeth()
 
+
+@router.get("/{tooth_number}", response_model=None)
+def get_tooth_by_number(tooth_number: int, tooth_controller: ToothController = Depends(),
+                        auth: CognitoAuth = Depends(cognito_sa.auth_required)):
+    return tooth_controller.get_tooth_by_number(tooth_number)
