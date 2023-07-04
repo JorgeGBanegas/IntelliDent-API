@@ -20,7 +20,7 @@ def get_odontogram_by_patient_id(patient_id: int, odontogram_controller: Odontog
     return odontogram_controller.get_odontogram_by_patient_id(patient_id)
 
 
-@router.get("/{odontogram_id}", response_model=Odontogram, status_code=200)
+@router.get("/{odontogram_id}", response_model=None, status_code=200)
 def get_odontogram_by_id(odontogram_id: int, odontogram_controller: OdontogramController = Depends()):
     return odontogram_controller.get_odontogram_by_id(odontogram_id)
 
