@@ -53,7 +53,11 @@ class PatientService:
                                      Patient.last_name.ilike(f"%{search_query}%"))
 
             query = query.order_by(Patient.first_name)
-            patients = query.offset(page * limit).limit(limit).all()
+
+            if limit > 0:
+                query = query.offset(page * limit).limit(limit)
+
+            patients = query.all()
             patients_list = [PatientItemList(patient_id=patient.patient_id, first_name=patient.first_name,
                                              last_name=patient.last_name,
                                              phone_number=patient.phone_number) for patient in patients]
