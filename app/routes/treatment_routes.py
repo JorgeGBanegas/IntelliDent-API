@@ -15,10 +15,12 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[Treatment], status_code=200)
-def get_all_treatments(search: str = None, treatment_controller: TreatmentController = Depends()):
+def get_all_treatments(search: str = None, treatment_controller: TreatmentController = Depends(),
+                       auth: CognitoAuth = Depends(cognito_sa.auth_required)):
     return treatment_controller.get_all_treatments(search)
 
 
 @router.post("/", response_model=None, status_code=201)
-def add_treatment(treatment: TreatmentCreate, treatment_controller: TreatmentController = Depends()):
+def add_treatment(treatment: TreatmentCreate, treatment_controller: TreatmentController = Depends(),
+                  auth: CognitoAuth = Depends(cognito_sa.auth_required)):
     return treatment_controller.add_treatment(treatment)

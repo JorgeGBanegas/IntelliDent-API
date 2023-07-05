@@ -15,6 +15,7 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[TypeOdontogram], status_code=200)
-def get_all_type_odontogram(type_odontogram_controller: TypeOdontogramController = Depends()):
+def get_all_type_odontogram(type_odontogram_controller: TypeOdontogramController = Depends(),
+                            auth: CognitoAuth = Depends(cognito_sa.auth_required)):
     return type_odontogram_controller.get_all_type_odontogram()
 
