@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 class ToothBase(BaseModel):
     tooth_name: str = Field(..., min_length=3, max_length=50, example="Incisivo")
-    numeration: int = Field(..., ge=11, le=48, example=11)
+    numeration: int = Field(..., ge=11, le=85, example=11)
 
     class Config:
         orm_mode = True
