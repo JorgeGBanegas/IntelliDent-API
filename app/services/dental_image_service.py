@@ -45,7 +45,7 @@ class DentalImageService:
                 for image in image_file:
                     # decode image base64
                     image_b64 = base64.b64decode(image.image_base64)
-                    image_name = datetime.now().strftime("%Y%m%d%H%M%S%f") + '.jpg'
+                    image_name = image.title + '.jpg'
                     new_image = DentalImage(path='', title=image.title, patient_id=patient_id,
                                             image_category_id=category_id)
 
