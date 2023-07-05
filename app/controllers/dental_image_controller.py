@@ -57,3 +57,18 @@ class DentalImageController:
                 "message": "Error al obtener imagenes",
                 "error": str(e)
             })
+
+    def delete_image(self, dental_image_id: int):
+        try:
+            return self.dental_image_service.delete_image(dental_image_id)
+
+        except RecordNotFoundException as e:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={
+                "message": "Error al eliminar imagen, Verifique los datos enviados",
+                "error": str(e)
+            })
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={
+                "message": "Error al eliminar imagen",
+                "error": str(e)
+            })

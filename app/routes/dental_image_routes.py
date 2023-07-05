@@ -44,3 +44,10 @@ async def get_all_image_patient_by_tooth(patient_id: int, tooth_number: int,
 @router.get("/patient", response_model=list[DentalImageItemList])
 async def get_all_images_by_patient(patient_id: int, dental_image_controller: DentalImageController = Depends()):
     return dental_image_controller.get_all_images_by_patient(patient_id)
+
+
+# delete image
+@router.delete("/{dental_image_id}", status_code=status.HTTP_200_OK)
+async def delete_dental_image(dental_image_id: int, dental_image_controller: DentalImageController = Depends(),
+                              ):
+    return dental_image_controller.delete_image(dental_image_id)

@@ -13,7 +13,6 @@ from app.schemas.dental_image_schema import DentalImageItemList, DentalImageCrea
 from app.services.tooth_service import ToothService
 
 
-# noinspection PyTypeChecker
 class DentalImageService:
     def __init__(self, db: Session):
         self.db = db
@@ -113,3 +112,26 @@ class DentalImageService:
             return images_list
         except Exception as e:
             raise ValueError(f"Error al obtener imagenes: {e}")
+
+    def _delete_image_from_s3(self, image_url: str):
+        try:
+            aws_settings = AwsSetting()
+            bucket = aws_settings.aws_bucket_name
+            s3 = boto3.client('s3')
+            s3.delete_object(Bucket=bucket, Key=image_url.split('/')[-1])
+        except Exception as e:
+            raise ValueError(f"Error al eliminar imagen de s3: {e}")
+
+    def delete_image(self, dental_image_id: int):
+        try:
+            image = self.db.query(DentalImage).filter(DentalImage.dental_image_id == dental_image_id).one()
+            self._delete_image_from_s3(image.path)
+            self.db.delete(image)
+            self.db.commit()
+            return {
+                "message": "Imagen eliminada correctamente"
+            }
+        except RecordNotFoundException:
+            raise
+        except Exception as e:
+            raise ValueError(f"No se pudo eliminar imagen: {e}")
