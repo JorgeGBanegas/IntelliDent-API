@@ -8,7 +8,7 @@ class Tooth(Base):
     __tablename__ = "tooth"
     tooth_id = Column(Integer, primary_key=True, index=True)
     tooth_name = Column(String(50))
-    numeration = Column(Integer)
+    numeration = Column(Integer, unique=True, nullable=False)
     description = Column(String(255), nullable=True)
     images = relationship("DentalImage", secondary="image_tooth", back_populates="teeth")
     details = relationship("DetailOdontogram", back_populates="tooth")
