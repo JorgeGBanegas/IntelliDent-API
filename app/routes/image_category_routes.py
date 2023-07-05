@@ -15,6 +15,6 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[ImageCategory])
-async def get_all_dental_images_by_patient_and_category(image_category_controller: ImageCategoryController = Depends(),
+async def get_all_categories(image_category_controller: ImageCategoryController = Depends(),
                                                         auth: CognitoAuth = Depends(cognito_sa.auth_required)):
     return image_category_controller.get_all_categories()
