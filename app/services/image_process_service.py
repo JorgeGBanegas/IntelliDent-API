@@ -233,7 +233,7 @@ class ImageProcessService:
             text_probability = "Probabilidad de Caries: " + str(inference["probability"]) + "%"
 
             while True:
-                font = ImageFont.truetype("Montserrat-SemiBold.ttf", font_size)
+                font = ImageFont.truetype("/app/app/Montserrat-SemiBold.ttf", font_size)
 
                 width_text, height_text = font.getsize(text_diagnosis)
 
@@ -242,7 +242,7 @@ class ImageProcessService:
 
                 font_size += 1
 
-            font = ImageFont.truetype("/app/Montserrat-SemiBold.ttf", font_size)
+            font = ImageFont.truetype("/app/app/Montserrat-SemiBold.ttf", font_size)
 
             text = text_diagnosis + "\n" + text_probability
             width_text, height_text = font.getsize(text)
@@ -264,6 +264,7 @@ class ImageProcessService:
             array_image = np.array(new_image)
             return array_image
         except Exception as e:
+            print('Error al agregar texto a la imagen: ')
             print(e)
             raise e
 
