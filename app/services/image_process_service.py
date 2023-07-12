@@ -242,7 +242,7 @@ class ImageProcessService:
 
                 font_size += 1
 
-            font = ImageFont.truetype("/app/app/Montserrat-SemiBold.ttf", font_size)
+            font = ImageFont.truetype("/app/Montserrat-SemiBold.ttf", font_size)
 
             text = text_diagnosis + "\n" + text_probability
             width_text, height_text = font.getsize(text)
