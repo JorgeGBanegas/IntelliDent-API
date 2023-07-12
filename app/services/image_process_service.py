@@ -7,6 +7,7 @@ import requests
 from fastapi import UploadFile
 from numpy import ndarray
 from sqlalchemy.orm import Session
+from PIL import Image, ImageDraw, ImageFont
 
 
 class ImageProcessService:
@@ -22,7 +23,9 @@ class ImageProcessService:
         inference_image = self._convert_ndarray_to_image(inference_image)
 
         inference = self._infer_image(inference_image, token)
-        images_array = [enhance_image, negative_image, magma_image]
+
+        new_enhance_image = self.add_text_to_image(enhance_image, inference)
+        images_array = [new_enhance_image, negative_image, magma_image]
         images = []
         for image in images_array:
             image = self._convert_ndarray_to_image(image)
@@ -218,3 +221,50 @@ class ImageProcessService:
         alpha = image[:, :, 3]
         colormap_image = cv2.merge((b, g, r, alpha))
         return colormap_image
+
+    @staticmethod
+    def add_text_to_image(image, inference):
+        try:
+            original_height, original_width = image.shape[:2]
+            font_size = 12
+            fill_color = (0, 0, 255) if inference["diagnosis"] == "Caries" else (0, 255, 0)
+            print("Color de texto: ", fill_color)
+            text_diagnosis = "Diagnóstico Presuntivo: " + inference["diagnosis"]
+            text_probability = "Probabilidad de Caries: " + str(inference["probability"]) + "%"
+
+            while True:
+                font = ImageFont.truetype("Montserrat-SemiBold.ttf", font_size)
+
+                width_text, height_text = font.getsize(text_diagnosis)
+
+                if width_text > original_width:
+                    break
+
+                font_size += 1
+
+            font = ImageFont.truetype("Montserrat-SemiBold.ttf", font_size)
+
+            text = text_diagnosis + "\n" + text_probability
+            width_text, height_text = font.getsize(text)
+
+            new_width = original_width + 12
+            new_height = original_height + (height_text * 2)
+
+            new_image = Image.new("RGB", (new_width, new_height), color=(0, 0, 0))
+
+            pil_image = Image.fromarray(image)
+            new_image.paste(pil_image, (0, 0))
+
+            draw = ImageDraw.Draw(new_image)
+
+            position_x = 0
+            position_y = original_height
+
+            draw.text((position_x, position_y), text, font=font, fill=fill_color)
+            array_image = np.array(new_image)
+            return array_image
+        except Exception as e:
+            print(e)
+            raise e
+
+
